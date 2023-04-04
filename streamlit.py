@@ -31,8 +31,13 @@ def imgInput():
         img = Image.open(uploaded_file)
         with col1:
             
-            file_path = os.path.abspath(os.path.join("Dataset/test/images",uploaded_file.name))
-            command = r'python detect.py --source {} --weights runs/train/exp/weights/best.pt'.format(file_path)
+            # Save the uploaded image to a temporary file
+            file_path = os.path.abspath(os.path.join("", uploaded_file.name))
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+                
+            # Pass the file path of the uploaded image as the value of the --source argument
+            command = f'python detect.py --source "{file_path}" --weights runs/train/exp/weights/best.pt'
             image = Image.open(file_path)
             new_image1 = image.resize((600, 400))
             return_value = os.popen(command).read()
@@ -41,13 +46,17 @@ def imgInput():
             
            
         with col2:
-            path,str= detect.run(source=file_path)
-            img_paths = os.path.join(path,uploaded_file.name)
+            # Get the path of the detected image
+            path, str = detect.run(source=file_path)
+            img_paths = os.path.join(path, uploaded_file.name)
             st.warning('Defects found in images: {}'.format(file_path))
             image1 = Image.open(img_paths)
             new_image2 = image1.resize((600, 400))
             st.image(new_image2,caption='Detected image',use_column_width=True)  
             st.write(str)
+            
+            # Delete the temporary file
+            os.remove(file_path)
             
 def load_lottieurl(url):
     r = requests.get(url)

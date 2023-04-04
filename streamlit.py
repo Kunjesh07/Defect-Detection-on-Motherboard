@@ -15,13 +15,42 @@ import pathlib
 import base64
 st.set_page_config(page_title="Defect Detection in Motherboard",page_icon=":tada:",layout="wide")
 
+
 title_style =""" <style>{
 # color:Blue;
 #font-size: 20px;
 font-family:Cascdia Code;
 }</style>"""
-            
 
+def urlInput():
+    url = st.text_input("Enter Image URL")
+    if url != '':
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        with st.spinner('Detecting...'):
+            # Save the downloaded image to a temporary file
+            file_path = os.path.abspath(os.path.join("", "temp.jpg"))
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+                
+            # Pass the file path of the downloaded image as the value of the --source argument
+            command = f'python detect.py --source "{file_path}" --weights runs/train/exp/weights/best.pt'
+            return_value = os.popen(command).read()
+            st.success(url)
+            st.image(img, caption='Uploaded image', use_column_width=True)
+            
+            # Get the path of the detected image
+            path, str = detect.run(source=file_path)
+            img_paths = os.path.join(path, "temp.jpg")
+            st.warning('Detected image: {}'.format(url))
+            image1 = Image.open(img_paths)
+            new_image2 = image1.resize((600, 400))
+            return_value = os.popen(command).read()
+            st.image(new_image2,caption='Detected image',use_column_width=True)  
+            st.write(str)
+            
+            # Delete the temporary file
+            os.remove(file_path)
 
 def imgInput():
     uploaded_file = st.file_uploader("Test Your Image Here...", type=['png', 'jpeg', 'jpg', 'JPG'])
@@ -43,13 +72,12 @@ def imgInput():
             return_value = os.popen(command).read()
             st.success(file_path)
             st.image(new_image1, caption='Uploaded image', use_column_width=True)
-            
-           
+               
         with col2:
             # Get the path of the detected image
             path, str = detect.run(source=file_path)
             img_paths = os.path.join(path, uploaded_file.name)
-            st.warning('Defects found in images: {}'.format(file_path))
+            st.warning('Detected image: {}'.format(file_path))
             image1 = Image.open(img_paths)
             new_image2 = image1.resize((600, 400))
             st.image(new_image2,caption='Detected image',use_column_width=True)  
@@ -74,25 +102,11 @@ def main():
         url_json = url.json()
     else:
        print("Error in the URL")
-  
-  
-  
-    st_lottie(url_json,reverse=True,
-          # height and width of animation
-          height=400,  
-          width=400,
-          # speed of animation
-          speed=1,  
-          # means the animation will run forever like a gif, and not as a still image
-          loop=True,  
-          # quality of elements used in the animation, other values are "low" and "medium"
-          quality='high',
-           # THis is just to uniquely identify the animation
-          key='Animation' )
-    st.write('<h1 style="color: Blue; font-size: 40px;">Defect Detection in Motherboard</h1>', unsafe_allow_html=True)
+
+    st.write('<h1 style="color: green; font-size: 40px;">Defect Detection in Motherboard</h1>', unsafe_allow_html=True)
     st.write('<h3 style="color:Yellow; font-size: 25px;">here you can check the defects in the motherboard</h1>',unsafe_allow_html=True)
     st.sidebar.title('⚙️ Choose option')
-    datasrc = st.sidebar.radio("Select input source.", ['From Device', 'From URL'])
+    datasrc = st.sidebar.radio("Select input source.", ['From Device','From URL'])
     
     st.markdown(
     """
@@ -108,23 +122,10 @@ def main():
     unsafe_allow_html=True
     )
     
-       
-                
-    # # option = st.sidebar.radio("Select input type.", ['DEVICE', 'URL'])
-    # if torch.cuda.is_available():
-    #     deviceoption = st.sidebar.radio("Select compute Device.", ['cpu', 'cuda'], disabled = False, index=1)
-    # else:
-    #     deviceoption = st.sidebar.radio("Select compute Device.", ['cpu', 'cuda'], disabled = True, index=0)
-    # # -- End of Sidebar
-
-    # st.header('Livestock Farming')
-    # st.subheader('Select options left-haned menu bar.')
-    # st.sidebar.markdown("https://github.com/thepbordin/Obstacle-Detection-for-Blind-people-Deployment")
     if datasrc == "From Device":    
         imgInput()
     elif datasrc == "From URL": 
         urlInput()
-
 
 if __name__ == '__main__':
     main()
